@@ -1,0 +1,67 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux desktop files
+*~
+.directory
+.Trash-*/
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.tmp
+*.bak
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.*
+
+# Build and generated output
+dist/
+build/
+out/
+coverage/
+.cache/
+.parcel-cache/
+.turbo/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python local tooling, if used for validation scripts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Temporary validation artifacts
+tmp/
+temp/
+*.generated.*
