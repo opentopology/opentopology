@@ -1,0 +1,279 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://opentopology.dev/schemas/otop-core-v0.2.schema.json",
+	"title": "OpenTopology Core 0.2 Manifest",
+	"description": "Schema for otop-core 0.2 JSON and YAML-compatible manifests.",
+	"type": "object",
+	"required": ["otop_version", "graph", "objects", "relationships"],
+	"properties": {
+		"otop_version": {
+			"const": 0.2
+		},
+		"graph": {
+			"type": "object",
+			"required": ["id", "title"],
+			"properties": {
+				"id": { "type": "string", "minLength": 1 },
+				"title": { "type": "string", "minLength": 1 },
+				"repository": { "type": "string", "minLength": 1 },
+				"commit": { "type": "string", "minLength": 1 },
+				"metadata": { "$ref": "#/$defs/graphMetadata" }
+			},
+			"additionalProperties": true
+		},
+		"objects": {
+			"type": "array",
+			"items": { "$ref": "#/$defs/object" }
+		},
+		"relationships": {
+			"type": "array",
+			"items": { "$ref": "#/$defs/relationship" }
+		},
+		"extensions": {
+			"type": "object",
+			"additionalProperties": true
+		},
+		"signatures": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": true
+			}
+		}
+	},
+	"additionalProperties": true,
+	"$defs": {
+		"utcTimestamp": {
+			"type": "string",
+			"format": "date-time",
+			"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+		},
+		"actor": {
+			"oneOf": [
+				{ "type": "string", "minLength": 1 },
+				{
+					"type": "object",
+					"additionalProperties": true
+				}
+			]
+		},
+		"graphMetadata": {
+			"type": "object",
+			"properties": {
+				"created_at": { "$ref": "#/$defs/utcTimestamp" },
+				"actor": { "$ref": "#/$defs/actor" }
+			},
+			"additionalProperties": true
+		},
+		"objectMetadata": {
+			"type": "object",
+			"required": ["created_at"],
+			"properties": {
+				"created_at": { "$ref": "#/$defs/utcTimestamp" },
+				"actor": { "$ref": "#/$defs/actor" }
+			},
+			"additionalProperties": true
+		},
+		"evidenceMetadata": {
+			"type": "object",
+			"required": ["created_at", "observed_at"],
+			"properties": {
+				"created_at": { "$ref": "#/$defs/utcTimestamp" },
+				"observed_at": { "$ref": "#/$defs/utcTimestamp" },
+				"actor": { "$ref": "#/$defs/actor" }
+			},
+			"additionalProperties": true
+		},
+		"relationshipMetadata": {
+			"type": "object",
+			"properties": {
+				"created_at": { "$ref": "#/$defs/utcTimestamp" },
+				"implemented_at": { "$ref": "#/$defs/utcTimestamp" },
+				"verified_at": { "$ref": "#/$defs/utcTimestamp" },
+				"waived_at": { "$ref": "#/$defs/utcTimestamp" },
+				"actor": { "$ref": "#/$defs/actor" }
+			},
+			"additionalProperties": true
+		},
+		"coreObjectBase": {
+			"type": "object",
+			"required": ["id", "kind", "title", "metadata"],
+			"properties": {
+				"id": { "type": "string", "minLength": 1 },
+				"kind": {
+					"type": "string",
+					"enum": ["intent", "constraint", "policy", "artifact", "evidence"]
+				},
+				"title": { "type": "string", "minLength": 1 },
+				"metadata": { "$ref": "#/$defs/objectMetadata" },
+				"lifecycle": {
+					"type": "string",
+					"pattern": "^(draft|active|deprecated|superseded|archived|[A-Za-z0-9]+(\\.[A-Za-z0-9-]+)+[A-Za-z0-9._:/-]*|[A-Za-z0-9.-]+:[A-Za-z0-9._/-]+)$"
+				},
+				"extensions": {
+					"type": "object",
+					"additionalProperties": true
+				}
+			},
+			"additionalProperties": true
+		},
+		"object": {
+			"oneOf": [
+				{
+					"allOf": [
+						{ "$ref": "#/$defs/coreObjectBase" },
+						{
+							"type": "object",
+							"properties": {
+								"kind": { "const": "intent" }
+							}
+						}
+					]
+				},
+				{
+					"allOf": [
+						{ "$ref": "#/$defs/coreObjectBase" },
+						{
+							"type": "object",
+							"properties": {
+								"kind": { "const": "constraint" },
+								"modality": { "type": "string" },
+								"constraint_type": { "type": "string" },
+								"checkability": { "type": "string" },
+								"assertion": { "type": "string" },
+								"expression_language": { "type": "string" },
+								"severity": { "type": "string" }
+							}
+						}
+					]
+				},
+				{
+					"allOf": [
+						{ "$ref": "#/$defs/coreObjectBase" },
+						{
+							"type": "object",
+							"properties": {
+								"kind": { "const": "policy" }
+							}
+						}
+					]
+				},
+				{
+					"allOf": [
+						{ "$ref": "#/$defs/coreObjectBase" },
+						{
+							"type": "object",
+							"required": ["artifact_type"],
+							"properties": {
+								"kind": { "const": "artifact" },
+								"artifact_type": { "type": "string", "minLength": 1 },
+								"language": { "type": "string" },
+								"locator": { "$ref": "#/$defs/artifactLocator" }
+							}
+						}
+					]
+				},
+				{
+					"allOf": [
+						{ "$ref": "#/$defs/coreObjectBase" },
+						{
+							"type": "object",
+							"required": ["evidence_type", "result"],
+							"not": { "required": ["produced_at"] },
+							"properties": {
+								"kind": { "const": "evidence" },
+								"metadata": { "$ref": "#/$defs/evidenceMetadata" },
+								"evidence_type": { "type": "string", "minLength": 1 },
+								"result": {
+									"type": "string",
+									"enum": ["pass", "fail", "unknown", "waived", "not_applicable"]
+								},
+								"subjects": {
+									"type": "array",
+									"items": { "$ref": "#/$defs/evidenceSubject" }
+								},
+								"provenance": {
+									"type": "object",
+									"additionalProperties": true
+								},
+								"signature": { "$ref": "#/$defs/signature" }
+							}
+						}
+					]
+				}
+			]
+		},
+		"relationship": {
+			"type": "object",
+			"required": ["from", "to", "type"],
+			"properties": {
+				"id": { "type": "string", "minLength": 1 },
+				"from": { "type": "string", "minLength": 1 },
+				"to": { "type": "string", "minLength": 1 },
+				"type": {
+					"type": "string",
+					"pattern": "^(derived_from|governed_by|implemented_by|verified_by|depends_on|conflicts_with|supersedes|waived_by|[A-Za-z0-9]+(\\.[A-Za-z0-9-]+)+[A-Za-z0-9._:/-]*|[A-Za-z0-9.-]+:[A-Za-z0-9._/-]+)$"
+				},
+				"metadata": { "$ref": "#/$defs/relationshipMetadata" },
+				"extensions": {
+					"type": "object",
+					"additionalProperties": true
+				}
+			},
+			"additionalProperties": true
+		},
+		"artifactLocator": {
+			"type": "object",
+			"properties": {
+				"repository": { "type": "string" },
+				"commit": { "type": "string" },
+				"path": { "type": "string" },
+				"symbol": { "type": "string" },
+				"range": {
+					"type": "object",
+					"properties": {
+						"start_line": { "type": "integer", "minimum": 1 },
+						"end_line": { "type": "integer", "minimum": 1 }
+					},
+					"additionalProperties": true
+				},
+				"digest": { "type": "string" },
+				"language": { "type": "string" },
+				"ast": {
+					"type": "object",
+					"additionalProperties": true
+				}
+			},
+			"additionalProperties": true
+		},
+		"evidenceSubject": {
+			"type": "object",
+			"required": ["id"],
+			"properties": {
+				"id": { "type": "string", "minLength": 1 },
+				"kind": {
+					"type": "string",
+					"enum": ["intent", "constraint", "policy", "artifact", "evidence"]
+				},
+				"relationship_type": { "type": "string" },
+				"digest": { "type": "string" },
+				"commit": { "type": "string" },
+				"version": {
+					"oneOf": [{ "type": "integer" }, { "type": "string" }]
+				}
+			},
+			"additionalProperties": true
+		},
+		"signature": {
+			"type": "object",
+			"required": ["payload_digest"],
+			"properties": {
+				"algorithm": { "type": "string" },
+				"key_id": { "type": "string" },
+				"payload_digest": { "type": "string", "minLength": 1 },
+				"signature": { "type": "string" }
+			},
+			"additionalProperties": true
+		}
+	}
+}
